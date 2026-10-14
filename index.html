@@ -72,7 +72,7 @@ function renderCards(){document.getElementById('serviceCardsContainer').innerHTM
 
 async function loadQueue(){
 try{
-const {data,error}=await supabaseClient.from('queue').select('*').order('joined_at',{ascending:true});
+const {data,error}=await supabaseClient.from('queue').select('*').order('id',{ascending:true});
 if(error) throw error;
 document.getElementById('dbStatus').innerHTML='● Connected - Real Database Active';
 document.getElementById('dbStatus').className='bg-green-600 text-white text-xs font-bold px-4 py-2 rounded-full';
