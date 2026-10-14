@@ -1,253 +1,153 @@
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QueueOptimizer Pro - LIVE DATABASE</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: {
-                        darkBg: '#090d16', cardBg: '#111827',
-                        neonBlue: '#3b82f6', neonPurple: '#8b5cf6',
-                        coralAccent: '#f43f5e', amberGlow: '#f59e0b'
-                    }
-                }
-            }
-        }
-    </script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <style>
-        body { background-color: #090d16; background-image: radial-gradient(rgba(59,130,246,0.15) 1px, transparent 1px); background-size: 28px 28px; }
-       .glass-card { background: rgba(17,24,39,0.75); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 20px 40px -15px rgba(0,0,0,0.7); }
-       .glow-blue { box-shadow: 0 0 25px rgba(59,130,246,0.35); }
-       .fade-in { animation: fadeIn 0.35s forwards; }
-        @keyframes fadeIn { from { opacity:0; transform:translateY(10px);} to { opacity:1; transform:translateY(0);} }
-    </style>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QueueOptimizer Pro - LIVE DATABASE</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>tailwind.config={darkMode:'class',theme:{extend:{colors:{darkBg:'#090d16',cardBg:'#111827',neonBlue:'#3b82f6',neonPurple:'#8b5cf6'}}}}</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+<style>body{background:#090d16;background-image:radial-gradient(rgba(59,130,246,.15) 1px,transparent 1px);background-size:28px 28px}.glass-card{background:rgba(17,24,39,.75);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.08)}.glow-blue{box-shadow:0 0 25px rgba(59,130,246,.35)}.fade-in{animation:fadeIn.35s forwards}@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}</style>
 </head>
-<body class="text-slate-100 font-sans min-h-screen flex flex-col">
-
-    <!-- SUPABASE CONFIG - PUT YOUR REAL KEY HERE -->
-    <script>
-        const SUPABASE_URL = "https://rygepkloytqvnqewwwda.supabase.co";
-        const SUPABASE_KEY = "PASTE_YOUR_eyJ_KEY_HERE_FROM_live.html";
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    </script>
-
-    <header class="glass-card sticky top-0 z-50 border-b border-slate-800/80">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between py-3">
-            <div class="flex items-center space-x-3.5">
-                <div class="bg-gradient-to-tr from-neonBlue to-neonPurple text-white p-3 rounded-2xl glow-blue"><i class="fa-solid fa-bolt text-lg"></i></div>
-                <div>
-                    <h1 class="font-black text-white text-xl">Queue<span class="text-neonBlue">Optimizer</span></h1>
-                    <p class="text-[10px] font-bold text-neonPurple uppercase">Real Database v3.2</p>
-                </div>
-            </div>
-            <div class="flex items-center space-x-3">
-                <div id="dbStatus" class="bg-green-950/60 text-green-400 text-xs font-bold px-4 py-2 rounded-full border border-green-500/30">● Connecting...</div>
-                <div id="liveClock" class="text-xs font-bold text-slate-300 bg-slate-900/90 px-4 py-2.5 rounded-xl border border-slate-800">00:00:00</div>
-            </div>
-        </div>
-    </header>
-
-    <nav class="bg-slate-900/50 backdrop-blur border-b border-slate-800/80">
-        <div class="max-w-7xl mx-auto px-4 flex space-x-8">
-            <button onclick="switchTab('citizen')" id="nav-citizen" class="tab-btn py-4 px-4 border-b-2 font-bold text-sm border-neonBlue text-neonBlue">Citizen Portal</button>
-            <button onclick="switchTab('staff')" id="nav-staff" class="tab-btn py-4 px-4 border-b-2 font-semibold text-sm border-transparent text-slate-400">Staff Dashboard</button>
-            <button onclick="switchTab('analytics')" id="nav-analytics" class="tab-btn py-4 px-4 border-b-2 font-semibold text-sm border-transparent text-slate-400">Analytics</button>
-        </div>
-    </nav>
-
-    <div id="toastContainer" class="fixed top-24 right-4 z-50 flex flex-col space-y-2 max-w-sm w-full pointer-events-none"></div>
-
-    <main class="flex-grow max-w-7xl mx-auto px-4 py-8 w-full space-y-8">
-
-        <section id="tab-citizen" class="tab-content fade-in space-y-8">
-            <div class="bg-gradient-to-r from-blue-900/40 via-indigo-950/60 to-purple-950/40 glass-card rounded-3xl p-8 relative overflow-hidden border border-blue-500/20 glow-blue">
-                <h2 class="text-3xl font-black text-white">Generate Your Digital Token - REAL DATABASE</h2>
-                <p class="text-slate-300 mt-2">Now with Supabase cloud sync. Your token saves in real database and shows on all devices.</p>
-            </div>
-
-            <div>
-                <h3 class="font-bold text-white mb-4">Select Service Category</h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5" id="serviceCardsContainer"></div>
-            </div>
-
-            <div id="activeTokenSection" class="hidden glass-card rounded-3xl p-8 border border-neonBlue/40 glow-blue">
-                <h4 class="text-2xl font-black text-white">Your Active Token Pass</h4>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-6">
-                    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 text-center">
-                        <span class="text-xs text-neonBlue">Token Code</span>
-                        <div id="displayTokenNumber" class="text-5xl font-black text-white mt-2">#G-104</div>
-                        <span id="displayCounterAssigned" class="text-xs text-slate-400 mt-2">Counter: Pending</span>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-slate-900/80 p-5 rounded-2xl text-center"><span class="text-xs text-slate-400">Ahead</span><div id="displayQueuePosition" class="text-3xl font-black">3</div></div>
-                        <div class="bg-slate-900/80 p-5 rounded-2xl text-center"><span class="text-xs text-slate-400">Wait</span><div id="displayWaitTime" class="text-3xl font-black text-neonBlue">12m</div></div>
-                    </div>
-                    <div class="bg-slate-950 p-5 rounded-2xl text-center border border-slate-800">
-                        <p class="text-green-400 font-bold">✓ Saved to Real Database</p>
-                        <p class="text-xs text-slate-400 mt-2">Your token is live on cloud</p>
-                        <button onclick="cancelToken()" class="mt-3 bg-rose-950 text-rose-400 px-4 py-2 rounded-xl text-xs font-bold">Cancel Token</button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="tab-staff" class="tab-content hidden fade-in space-y-8">
-            <div class="glass-card p-6 rounded-3xl flex justify-between items-center">
-                <div><h2 class="text-2xl font-black">Staff Dashboard - Live Database</h2><p class="text-sm text-slate-400">Real data from Supabase</p></div>
-                <button onclick="callNextToken()" class="bg-gradient-to-r from-neonBlue to-neonPurple text-white font-black px-5 py-2.5 rounded-xl text-xs glow-blue">Call Next Token</button>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="glass-card rounded-3xl p-6"><span class="text-xs text-emerald-400">Currently Serving</span><div id="staffCurrentToken" class="text-4xl font-black mt-2">#G-103</div><p id="staffCurrentService" class="text-sm text-slate-400 mt-1">General Service</p>
-                <div class="mt-4 flex gap-2"><button onclick="completeCurrentToken()" class="flex-1 bg-emerald-950 text-emerald-300 py-2 rounded-xl text-xs font-bold">Complete</button><button onclick="skipCurrentToken()" class="flex-1 bg-amber-950 text-amber-300 py-2 rounded-xl text-xs font-bold">Skip</button></div></div>
-                <div class="glass-card rounded-3xl p-6 md:col-span-2"><h4 class="font-bold mb-4">Stats</h4><div class="grid grid-cols-3 gap-4"><div class="bg-slate-900 p-4 rounded-xl text-center"><span class="text-xs text-slate-400">Pending</span><div id="statPendingQueue" class="text-2xl font-black text-neonBlue">0</div></div><div class="bg-slate-900 p-4 rounded-xl text-center"><span class="text-xs text-slate-400">Served</span><div id="statServedToday" class="text-2xl font-black">42</div></div><div class="bg-slate-900 p-4 rounded-xl text-center"><span class="text-xs text-slate-400">Database</span><div class="text-xl font-black text-green-400">LIVE</div></div></div></div>
-            </div>
-
-            <div class="glass-card rounded-3xl overflow-hidden">
-                <div class="px-6 py-4 border-b border-slate-800 flex justify-between"><h3 class="font-bold text-sm">Live Queue from Supabase</h3><span class="text-xs bg-blue-950 text-neonBlue px-3 py-1 rounded-full">Supabase Sync</span></div>
-                <div class="overflow-x-auto"><table class="w-full text-left"><thead><tr class="bg-slate-900/60 text-slate-400 text-xs uppercase border-b border-slate-800"><th class="py-3 px-6">Token</th><th class="py-3 px-6">Service</th><th class="py-3 px-6">Status</th><th class="py-3 px-6 text-right">Action</th></tr></thead><tbody id="staffQueueTableBody" class="divide-y divide-slate-800/60 text-sm"></tbody></table></div>
-                <div class="p-4 flex gap-2"><button onclick="loadQueue()" class="bg-slate-800 text-white px-4 py-2 rounded-xl text-xs">🔄 Refresh from DB</button><button onclick="clearQueue()" class="bg-rose-950 text-rose-300 px-4 py-2 rounded-xl text-xs">Clear All from DB</button></div>
-            </div>
-        </section>
-
-        <section id="tab-analytics" class="tab-content hidden fade-in">
-            <div class="glass-card p-8 rounded-3xl"><h2 class="text-2xl font-black">Analytics - Real Database Count</h2><div class="grid grid-cols-3 gap-6 mt-6"><div class="bg-slate-900 p-6 rounded-2xl text-center"><div id="analyticsQueueLength" class="text-3xl font-black">0</div><p class="text-xs text-slate-400">In Queue (from DB)</p></div><div class="bg-slate-900 p-6 rounded-2xl text-center"><div id="analyticsCompleted" class="text-3xl font-black">128</div><p class="text-xs text-slate-400">Served Today</p></div><div class="bg-slate-900 p-6 rounded-2xl text-center"><div class="text-3xl font-black text-green-400">LIVE</div><p class="text-xs text-slate-400">Supabase Active</p></div></div></div>
-        </section>
-
-    </main>
-
-    <footer class="bg-slate-950 border-t border-slate-800 py-6 text-center text-xs text-slate-400">© 2026 QueueOptimizer Pro - Real Database Edition</footer>
+<body class="text-slate-100 min-h-screen flex flex-col">
 
 <script>
-let state = {
- activeTab:'citizen', activeStaffCount:3, maxStaff:4, servedTodayCount:42, userToken:null,
- currentServing:{number:'#G-103', service:'General Service'},
- services:[
-  {id:'General', name:'General Service', code:'G', icon:'fa-user-clock', timePerPerson:4, color:'bg-blue-950/60 text-neonBlue border-blue-800/60'},
-  {id:'Priority', name:'Priority / Elderly', code:'P', icon:'fa-hand-holding-heart', timePerPerson:3, color:'bg-emerald-950/60 text-emerald-400 border-emerald-800/60'},
-  {id:'Document', name:'Document Verification', code:'D', icon:'fa-id-card', timePerPerson:7, color:'bg-purple-950/60 text-neonPurple border-purple-800/60'},
-  {id:'Billing', name:'Billing & Payments', code:'B', icon:'fa-receipt', timePerPerson:3, color:'bg-amber-950/60 text-amber-400 border-amber-800/60'}
- ],
- queueList:[]
-};
+const SUPABASE_URL = "https://yqyehvdskixrldpsjyvi.supabase.co";
+const SUPABASE_KEY = "sb_publishable_yEcPXsZCoWnZPjF47Q6fZA_OzPZ_t-v";
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+</script>
 
-window.onload = function(){ startLiveClock(); renderServiceCards(); loadQueue(); setInterval(loadQueue,4000); }
+<header class="glass-card sticky top-0 z-50 border-b border-slate-800/80">
+<div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+<div class="flex items-center space-x-3"><div class="bg-gradient-to-tr from-blue-500 to-purple-500 p-3 rounded-2xl glow-blue"><i class="fa-solid fa-bolt"></i></div><div><h1 class="font-black text-xl">Queue<span class="text-blue-400">Optimizer</span></h1><p class="text-[10px] font-bold text-purple-400 uppercase">Real Database Live</p></div></div>
+<div class="flex items-center gap-3"><div id="dbStatus" class="bg-yellow-900/60 text-yellow-300 text-xs font-bold px-4 py-2 rounded-full border border-yellow-600">● Connecting...</div><div id="liveClock" class="text-xs bg-slate-900 px-3 py-2 rounded-xl border border-slate-800">00:00</div></div>
+</div>
+</header>
 
-function startLiveClock(){ setInterval(()=>{document.getElementById('liveClock').innerText=new Date().toLocaleTimeString();},1000); }
+<nav class="bg-slate-900/50 border-b border-slate-800">
+<div class="max-w-7xl mx-auto px-4 flex gap-6">
+<button onclick="switchTab('citizen')" id="nav-citizen" class="tab-btn py-4 border-b-2 border-blue-500 text-blue-400 font-bold text-sm">Citizen Portal</button>
+<button onclick="switchTab('staff')" id="nav-staff" class="tab-btn py-4 border-b-2 border-transparent text-slate-400 text-sm">Staff Dashboard</button>
+<button onclick="switchTab('analytics')" id="nav-analytics" class="tab-btn py-4 border-b-2 border-transparent text-slate-400 text-sm">Analytics</button>
+</div>
+</nav>
 
-function switchTab(id){
- document.querySelectorAll('.tab-content').forEach(el=>el.classList.add('hidden'));
- document.querySelectorAll('.tab-btn').forEach(b=>{b.classList.remove('border-neonBlue','text-neonBlue'); b.classList.add('border-transparent','text-slate-400');});
- document.getElementById(`tab-${id}`).classList.remove('hidden');
- document.getElementById(`nav-${id}`).classList.add('border-neonBlue','text-neonBlue');
-}
+<div id="toastContainer" class="fixed top-24 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
 
-function renderServiceCards(){
- document.getElementById('serviceCardsContainer').innerHTML=state.services.map(s=>`
-  <div onclick="generateToken('${s.id}')" class="glass-card p-6 rounded-3xl hover:border-neonBlue/50 cursor-pointer group border border-slate-800">
-   <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl mb-4 border ${s.color}"><i class="fa-solid ${s.icon}"></i></div>
-   <h4 class="font-bold text-white group-hover:text-neonBlue">${s.name}</h4>
-   <p class="text-xs text-slate-400 mt-1">${s.timePerPerson} mins per user</p>
-   <div class="mt-4 text-neonBlue font-bold text-xs">Get Token →</div>
-  </div>
- `).join('');
-}
+<main class="flex-grow max-w-7xl mx-auto px-4 py-8 w-full space-y-8">
 
-// ===== REAL DATABASE FUNCTIONS =====
+<section id="tab-citizen" class="tab-content space-y-6">
+<div class="bg-gradient-to-r from-blue-900/40 to-purple-950/40 glass-card rounded-3xl p-8 border border-blue-500/20 glow-blue">
+<h2 class="text-3xl font-black">Generate Token - REAL DATABASE</h2><p class="text-slate-300 mt-2">Live cloud sync - tokens save in Supabase</p></div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5" id="serviceCardsContainer"></div>
+<div id="activeTokenSection" class="hidden glass-card rounded-3xl p-8 border border-blue-400/40 glow-blue">
+<h4 class="text-2xl font-black">Your Active Token</h4>
+<div class="grid grid-cols-3 gap-6 my-6">
+<div class="bg-slate-900 rounded-2xl p-6 text-center border border-slate-800"><span class="text-xs text-blue-400">Token</span><div id="displayTokenNumber" class="text-4xl font-black mt-2">#G-104</div><span id="displayCounterAssigned" class="text-xs text-slate-400">Counter Pending</span></div>
+<div class="grid grid-cols-2 gap-4"><div class="bg-slate-900 p-5 rounded-2xl text-center"><span class="text-xs text-slate-400">Ahead</span><div id="displayQueuePosition" class="text-3xl font-black">1</div></div><div class="bg-slate-900 p-5 rounded-2xl text-center"><span class="text-xs text-slate-400">Wait</span><div id="displayWaitTime" class="text-3xl font-black text-blue-400">4m</div></div></div>
+<div class="bg-slate-950 p-5 rounded-2xl text-center border border-slate-800"><p class="text-green-400 font-bold">✓ Saved to Database</p><button onclick="cancelToken()" class="mt-3 bg-rose-950 text-rose-400 px-4 py-2 rounded-xl text-xs font-bold">Cancel Token</button></div>
+</div>
+</div>
+</section>
+
+<section id="tab-staff" class="tab-content hidden space-y-6">
+<div class="glass-card p-6 rounded-3xl flex justify-between items-center"><div><h2 class="text-2xl font-black">Staff Dashboard</h2><p class="text-sm text-slate-400">Live from Supabase</p></div><button onclick="callNextToken()" class="bg-blue-600 text-white font-black px-5 py-2.5 rounded-xl text-xs glow-blue">Call Next</button></div>
+<div class="grid grid-cols-3 gap-6"><div class="glass-card p-6 rounded-3xl"><span class="text-xs text-green-400">Serving</span><div id="staffCurrentToken" class="text-4xl font-black mt-2">#G-103</div><div class="mt-4 flex gap-2"><button onclick="completeCurrentToken()" class="flex-1 bg-emerald-950 text-emerald-300 py-2 rounded-xl text-xs font-bold">Complete</button><button onclick="skipCurrentToken()" class="flex-1 bg-amber-950 text-amber-300 py-2 rounded-xl text-xs font-bold">Skip</button></div></div><div class="glass-card p-6 rounded-3xl col-span-2"><div class="grid grid-cols-3 gap-4"><div class="bg-slate-900 p-4 rounded-xl text-center"><span class="text-xs text-slate-400">Pending</span><div id="statPendingQueue" class="text-2xl font-black text-blue-400">0</div></div><div class="bg-slate-900 p-4 rounded-xl text-center"><span class="text-xs text-slate-400">Served</span><div id="statServedToday" class="text-2xl font-black">42</div></div><div class="bg-slate-900 p-4 rounded-xl text-center"><span class="text-xs text-slate-400">DB</span><div class="text-xl font-black text-green-400">LIVE</div></div></div></div></div>
+<div class="glass-card rounded-3xl overflow-hidden"><div class="px-6 py-4 border-b border-slate-800 flex justify-between"><h3 class="font-bold text-sm">Live Queue (Supabase)</h3><span class="text-xs bg-blue-950 text-blue-400 px-3 py-1 rounded-full">Sync Active</span></div><div class="overflow-x-auto"><table class="w-full text-left"><thead><tr class="bg-slate-900/60 text-slate-400 text-xs uppercase border-b border-slate-800"><th class="py-3 px-6">Token</th><th class="py-3 px-6">Service</th><th class="py-3 px-6 text-right">Action</th></tr></thead><tbody id="staffQueueTableBody" class="divide-y divide-slate-800 text-sm"></tbody></table></div><div class="p-4 flex gap-2"><button onclick="loadQueue()" class="bg-slate-800 text-white px-4 py-2 rounded-xl text-xs">🔄 Refresh</button><button onclick="clearQueue()" class="bg-rose-950 text-rose-300 px-4 py-2 rounded-xl text-xs">Clear DB</button></div></div>
+</section>
+
+<section id="tab-analytics" class="tab-content hidden"><div class="glass-card p-8 rounded-3xl"><h2 class="text-2xl font-black">Analytics</h2><div class="grid grid-cols-3 gap-6 mt-6"><div class="bg-slate-900 p-6 rounded-2xl text-center"><div id="analyticsQueueLength" class="text-3xl font-black">0</div><p class="text-xs text-slate-400">In Queue</p></div><div class="bg-slate-900 p-6 rounded-2xl text-center"><div id="analyticsCompleted" class="text-3xl font-black">42</div><p class="text-xs text-slate-400">Served</p></div><div class="bg-slate-900 p-6 rounded-2xl text-center"><div class="text-3xl font-black text-green-400">LIVE</div><p class="text-xs text-slate-400">Supabase</p></div></div></div></section>
+
+</main>
+
+<footer class="bg-slate-950 border-t border-slate-800 py-6 text-center text-xs text-slate-400">© 2026 QueueOptimizer - Real Database Edition</footer>
+
+<script>
+let state={activeTab:'citizen',servedTodayCount:42,userToken:null,currentServing:{number:'#G-103',service:'General'},services:[{id:'General',name:'General Service',code:'G',icon:'fa-user-clock',time:4,color:'bg-blue-950 text-blue-400 border-blue-800'},{id:'Priority',name:'Priority / Elderly',code:'P',icon:'fa-hand-holding-heart',time:3,color:'bg-emerald-950 text-emerald-400 border-emerald-800'},{id:'Document',name:'Document Verification',code:'D',icon:'fa-id-card',time:7,color:'bg-purple-950 text-purple-400 border-purple-800'},{id:'Billing',name:'Billing & Payments',code:'B',icon:'fa-receipt',time:3,color:'bg-amber-950 text-amber-400 border-amber-800'}],queueList:[]};
+window.onload=function(){startClock();renderCards();loadQueue();setInterval(loadQueue,3000);}
+function startClock(){setInterval(()=>{document.getElementById('liveClock').innerText=new Date().toLocaleTimeString()},1000)}
+function switchTab(id){document.querySelectorAll('.tab-content').forEach(e=>e.classList.add('hidden'));document.querySelectorAll('.tab-btn').forEach(b=>{b.classList.remove('border-blue-500','text-blue-400');b.classList.add('border-transparent','text-slate-400')});document.getElementById('tab-'+id).classList.remove('hidden');document.getElementById('nav-'+id).classList.add('border-blue-500','text-blue-400')}
+function renderCards(){document.getElementById('serviceCardsContainer').innerHTML=state.services.map(s=>`<div onclick="generateToken('${s.id}')" class="glass-card p-6 rounded-3xl cursor-pointer hover:border-blue-500/50 border border-slate-800"><div class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl mb-4 border ${s.color}"><i class="fa-solid ${s.icon}"></i></div><h4 class="font-bold">${s.name}</h4><p class="text-xs text-slate-400">${s.time} mins per user</p><div class="mt-4 text-blue-400 font-bold text-xs">Get Token →</div></div>`).join('')}
+
 async function loadQueue(){
- try{
-  const {data, error} = await supabaseClient.from('queue').select('*').order('joined_at',{ascending:true});
-  if(error) throw error;
-  document.getElementById('dbStatus').innerHTML='● Connected - Real Database Active';
-  document.getElementById('dbStatus').className='bg-green-600 text-white text-xs font-bold px-4 py-2 rounded-full';
-  state.queueList = data.map(r=>({id:r.id, number:r.name, service:'General Service', status:'Waiting', waitTime:'4m', dbId:r.id}));
-  renderStaffQueueTable(); updateAnalytics();
- }catch(e){
-  document.getElementById('dbStatus').innerHTML='❌ '+e.message;
-  document.getElementById('dbStatus').className='bg-red-600 text-white text-xs font-bold px-4 py-2 rounded-full';
- }
+try{
+const {data,error}=await supabaseClient.from('queue').select('*').order('joined_at',{ascending:true});
+if(error) throw error;
+document.getElementById('dbStatus').innerHTML='● Connected - Real Database Active';
+document.getElementById('dbStatus').className='bg-green-600 text-white text-xs font-bold px-4 py-2 rounded-full';
+state.queueList=data.map(r=>({id:r.id,number:r.name,service:'General Service',dbId:r.id}));
+renderTable();updateStats();
+}catch(e){
+document.getElementById('dbStatus').innerHTML='❌ '+e.message;
+document.getElementById('dbStatus').className='bg-red-600 text-white text-xs font-bold px-4 py-2 rounded-full';
+}
 }
 
 async function generateToken(serviceId){
- const service = state.services.find(s=>s.id===serviceId);
- const randomNum = Math.floor(Math.random()*900)+100;
- const tokenNumber = `#${service.code}-${randomNum}`;
- try{
-  const {error} = await supabaseClient.from('queue').insert([{name: tokenNumber}]);
-  if(error) throw error;
-  state.userToken = {number:tokenNumber, service:service.name, position:state.queueList.length+1, waitTime:`${service.timePerPerson*2}m`};
-  document.getElementById('activeTokenSection').classList.remove('hidden');
-  document.getElementById('displayTokenNumber').innerText=tokenNumber;
-  document.getElementById('displayQueuePosition').innerText=state.queueList.length+1;
-  document.getElementById('displayWaitTime').innerText=`${service.timePerPerson*2}m`;
-  document.getElementById('activeServiceTitle')?.innerText || (document.getElementById('displayCounterAssigned').innerText=`Counter: #${Math.floor(Math.random()*3)+1}`);
-  showToast(`Token ${tokenNumber} saved to REAL DATABASE!`, 'success');
-  loadQueue();
-  document.getElementById('activeTokenSection').scrollIntoView({behavior:'smooth'});
- }catch(e){ showToast(e.message,'warning'); }
+const s=state.services.find(x=>x.id===serviceId);
+const token='#'+s.code+'-'+(Math.floor(Math.random()*900)+100);
+try{
+const {error}=await supabaseClient.from('queue').insert([{name:token}]);
+if(error) throw error;
+state.userToken={number:token,service:s.name};
+document.getElementById('activeTokenSection').classList.remove('hidden');
+document.getElementById('displayTokenNumber').innerText=token;
+document.getElementById('displayQueuePosition').innerText=state.queueList.length+1;
+document.getElementById('displayWaitTime').innerText=s.time*2+'m';
+showToast('Token '+token+' saved to REAL DB!','success');
+loadQueue();
+}catch(e){showToast(e.message,'warning')}
 }
 
 async function cancelToken(){
- if(!state.userToken) return;
- try{
-  const {data} = await supabaseClient.from('queue').select('id').eq('name', state.userToken.number);
-  if(data.length) await supabaseClient.from('queue').delete().eq('id', data[0].id);
-  state.userToken=null; document.getElementById('activeTokenSection').classList.add('hidden');
-  showToast('Token cancelled from database','info'); loadQueue();
- }catch(e){ showToast(e.message,'warning'); }
+if(!state.userToken) return;
+try{
+const {data}=await supabaseClient.from('queue').select('id').eq('name',state.userToken.number);
+if(data.length) await supabaseClient.from('queue').delete().eq('id',data[0].id);
+state.userToken=null;document.getElementById('activeTokenSection').classList.add('hidden');
+showToast('Cancelled','info');loadQueue();
+}catch(e){showToast(e.message,'warning')}
 }
 
 async function callNextToken(){
- if(state.queueList.length===0){ showToast('Queue empty!','info'); return; }
- const next = state.queueList[0];
- try{
-  await supabaseClient.from('queue').delete().eq('id', next.dbId);
-  state.currentServing={number:next.number, service:next.service};
-  document.getElementById('staffCurrentToken').innerText=next.number;
-  document.getElementById('staffCurrentService').innerText=next.service;
-  state.servedTodayCount++; document.getElementById('statServedToday').innerText=state.servedTodayCount;
-  showToast(`Now Serving ${next.number}`,'success'); loadQueue();
- }catch(e){ showToast(e.message,'warning'); }
+if(state.queueList.length===0){showToast('Empty','info');return}
+const next=state.queueList[0];
+try{
+await supabaseClient.from('queue').delete().eq('id',next.dbId);
+state.currentServing={number:next.number};document.getElementById('staffCurrentToken').innerText=next.number;
+state.servedTodayCount++;document.getElementById('statServedToday').innerText=state.servedTodayCount;
+showToast('Serving '+next.number,'success');loadQueue();
+}catch(e){showToast(e.message,'warning')}
 }
 
 async function callSpecificToken(id){
- const item = state.queueList.find(q=>q.id===id);
- if(!item) return;
- await supabaseClient.from('queue').delete().eq('id', item.dbId);
- state.currentServing={number:item.number, service:item.service};
- document.getElementById('staffCurrentToken').innerText=item.number;
- loadQueue(); showToast(`Called ${item.number}`,'success');
+const item=state.queueList.find(q=>q.id===id);
+if(!item) return;
+await supabaseClient.from('queue').delete().eq('id',item.dbId);
+document.getElementById('staffCurrentToken').innerText=item.number;
+loadQueue();showToast('Called '+item.number,'success');
 }
 
-async function completeCurrentToken(){ state.servedTodayCount++; document.getElementById('statServedToday').innerText=state.servedTodayCount; callNextToken(); }
-function skipCurrentToken(){ showToast(`Skipped ${state.currentServing.number}`,'warning'); callNextToken(); }
-async function clearQueue(){ if(!confirm('Clear all from REAL database?'))return; const {data}=await supabaseClient.from('queue').select('id'); if(data.length) await supabaseClient.from('queue').delete().in('id',data.map(d=>d.id)); loadQueue(); showToast('Database cleared','info'); }
+function completeCurrentToken(){state.servedTodayCount++;document.getElementById('statServedToday').innerText=state.servedTodayCount;callNextToken()}
+function skipCurrentToken(){showToast('Skipped','warning');callNextToken()}
+async function clearQueue(){if(!confirm('Clear all?')) return;const {data}=await supabaseClient.from('queue').select('id');if(data.length) await supabaseClient.from('queue').delete().in('id',data.map(d=>d.id));loadQueue();showToast('Cleared','info')}
 
-function renderStaffQueueTable(){
- const tbody=document.getElementById('staffQueueTableBody');
- if(state.queueList.length===0){ tbody.innerHTML=`<tr><td colspan=4 class="py-6 text-center text-slate-500">No tokens in database. Generate one!</td></tr>`; }
- else{ tbody.innerHTML=state.queueList.map((item,idx)=>`<tr class="hover:bg-slate-900/60"><td class="py-3 px-6 font-black text-neonBlue">${item.number}</td><td class="py-3 px-6">${item.service}</td><td class="py-3 px-6"><span class="bg-amber-950 text-amber-400 text-xs px-3 py-1 rounded-full">Waiting #${idx+1}</span></td><td class="py-3 px-6 text-right"><button onclick="callSpecificToken('${item.id}')" class="bg-blue-950 text-neonBlue px-3 py-1.5 rounded-lg text-xs font-bold">Call</button></td></tr>`).join(''); }
- document.getElementById('statPendingQueue').innerText=state.queueList.length;
+function renderTable(){
+const tbody=document.getElementById('staffQueueTableBody');
+if(state.queueList.length===0) tbody.innerHTML='<tr><td colspan=3 class="py-6 text-center text-slate-500">No tokens - generate one!</td></tr>';
+else tbody.innerHTML=state.queueList.map((item,i)=>`<tr class="hover:bg-slate-900/60"><td class="py-3 px-6 font-black text-blue-400">${item.number}</td><td class="py-3 px-6">General Service</td><td class="py-3 px-6 text-right"><button onclick="callSpecificToken('${item.id}')" class="bg-blue-950 text-blue-400 px-3 py-1.5 rounded-lg text-xs font-bold">Call</button></td></tr>`).join('');
+document.getElementById('statPendingQueue').innerText=state.queueList.length;
 }
-function updateAnalytics(){ document.getElementById('analyticsQueueLength').innerText=state.queueList.length; document.getElementById('analyticsCompleted').innerText=state.servedTodayCount; }
-
+function updateStats(){document.getElementById('analyticsQueueLength').innerText=state.queueList.length;document.getElementById('analyticsCompleted').innerText=state.servedTodayCount}
 function showToast(msg,type='info'){
- const c=document.getElementById('toastContainer'); const t=document.createElement('div');
- let bg='bg-slate-900 border-slate-700'; let icon='fa-circle-info text-neonBlue';
- if(type==='success'){bg='bg-emerald-950 border-emerald-700 text-emerald-200'; icon='fa-circle-check text-emerald-400';}
- if(type==='warning'){bg='bg-amber-950 border-amber-700 text-amber-200'; icon='fa-triangle-exclamation text-amber-400';}
- t.className=`${bg} border p-4 rounded-2xl shadow-2xl flex items-center gap-3 pointer-events-auto fade-in text-xs font-bold`;
- t.innerHTML=`<i class="fa-solid ${icon}"></i><div>${msg}</div>`;
- c.appendChild(t); setTimeout(()=>{t.style.opacity='0'; setTimeout(()=>t.remove(),300);},3000);
+const c=document.getElementById('toastContainer');const t=document.createElement('div');
+let bg='bg-slate-900 border-slate-700';let icon='fa-circle-info text-blue-400';
+if(type==='success'){bg='bg-emerald-950 border-emerald-700 text-emerald-200';icon='fa-circle-check text-emerald-400'}
+if(type==='warning'){bg='bg-amber-950 border-amber-700 text-amber-200';icon='fa-triangle-exclamation text-amber-400'}
+t.className=bg+' border p-4 rounded-2xl shadow-2xl flex items-center gap-3 pointer-events-auto fade-in text-xs font-bold';
+t.innerHTML='<i class="fa-solid '+icon+'"></i><div>'+msg+'</div>';
+c.appendChild(t);setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),300)},3000);
 }
 </script>
 </body>
